@@ -43,6 +43,7 @@ from ..exceptions import (
 )
 from .AsyncEvent import AsyncEvent
 from .utils import get_api, raise_for_statement
+from .ua import user_agent
 
 ################################################## BEGIN Logger ##################################################
 
@@ -1495,7 +1496,7 @@ OE = [
 APPKEY = "4409e2ce8ffd12b8"
 APPSEC = "59b43e04ad6965f34319062b478f83dd"
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0",
+    "User-Agent": lambda: random.choice(user_agent),
     "Referer": "https://www.bilibili.com",
 }
 API = get_api("credential")
@@ -2155,14 +2156,18 @@ class Api:
             self.data["csrf_token"] = self.credential.bili_jct
         # 处理 cookies
         cookies = self.credential.get_cookies()
-        if (cookies["buvid3"] == "" or cookies["buvid4"] == "") and request_settings.get_enable_auto_buvid():
+        if (
+            cookies["buvid3"] == "" or cookies["buvid4"] == ""
+        ) and request_settings.get_enable_auto_buvid():
             buvids = await get_buvid()
             cookies["buvid3"] = buvids[0]
             cookies["buvid4"] = buvids[1]
         cookies["opus-goback"] = "1"
         # bili_ticket
         if request_settings.get_enable_bili_ticket():
-            cookies["bili_ticket"], cookies["bili_ticket_expires"] = await get_bili_ticket(self.credential)
+            cookies["bili_ticket"], cookies["bili_ticket_expires"] = (
+                await get_bili_ticket(self.credential)
+            )
         # APP 鉴权
         if self.sign:
             if self.method in ["POST", "DELETE", "PATCH"]:
